@@ -65,6 +65,7 @@ type Installment = {
   number: number;
   due_date: string;
   amount: string;
+  paid_amount: string;
   status: string;
   payment_method: string;
   paid_at: string | null;
@@ -188,6 +189,7 @@ export function CRMApp() {
   const [saleItems, setSaleItems] = useState<SaleDraftItem[]>([]);
   const [paymentModal, setPaymentModal] = useState<Installment | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("pix");
+  const [paymentAmount, setPaymentAmount] = useState("");
 
   const documentIsValid = useMemo(
     () => validateDocument(clientForm.document),
@@ -197,6 +199,16 @@ export function CRMApp() {
     const values = [...categories.map((category) => category.name), productForm.category];
     return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
   }, [categories, productForm.category]);
+  const draftProduct = useMemo(
+    () => products.find((product) => product.id === Number(saleDraftItem.productId)) ?? null,
+    [products, saleDraftItem.productId],
+  );
+  const salePriceBelowPurchasePrice = useMemo(() => {
+    if (!draftProduct?.purchase_price || !saleDraftItem.salePrice) {
+      return false;
+    }
+    return Number(normalizeCurrencyValue(saleDraftItem.salePrice)) < Number(draftProduct.purchase_price);
+  }, [draftProduct, saleDraftItem.salePrice]);
 
   const visibleTabs = user?.role === "admin" ? tabs : tabs.filter((tab) => tab.id !== "dashboard");
 
@@ -285,6 +297,16 @@ export function CRMApp() {
       fetchBootstrap(user);
     }
   }, [user, accessToken]);
+
+  useEffect(() => {
+    if (!paymentModal) {
+      setPaymentMethod("pix");
+      setPaymentAmount("");
+      return;
+    }
+    setPaymentMethod(paymentModal.payment_method || "pix");
+    setPaymentAmount(formatCurrencyInput(paymentModal.amount));
+  }, [paymentModal]);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -493,7 +515,17 @@ export function CRMApp() {
 
   const saveSale = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!saleItems.length) {
+    const draftItemIsComplete = Boolean(saleDraftItem.productId && saleDraftItem.salePrice && saleDraftItem.quantity);
+    const preparedSaleItems = draftItemIsComplete
+      ? [
+          ...saleItems,
+          {
+            ...saleDraftItem,
+            salePrice: normalizeCurrencyValue(saleDraftItem.salePrice),
+          },
+        ]
+      : saleItems;
+    if (!preparedSaleItems.length) {
       setError("Adicione pelo menos um item na venda.");
       return;
     }
@@ -502,7 +534,7 @@ export function CRMApp() {
         customer: saleForm.customerId ? Number(saleForm.customerId) : null,
         installments_count: Number(saleForm.installmentsCount),
         first_due_date: saleForm.firstDueDate,
-        items: saleItems.map((item) => ({
+        items: preparedSaleItems.map((item) => ({
           product: Number(item.productId),
           quantity: Number(item.quantity),
           sale_price: normalizeCurrencyValue(item.salePrice),
@@ -510,6 +542,7 @@ export function CRMApp() {
       });
       setSaleForm(emptySaleForm);
       setSaleItems([]);
+      setSaleDraftItem({ productId: "", quantity: "1", salePrice: "" });
       await fetchBootstrap();
     } catch {
       setError("Não foi possível registrar a venda.");
@@ -532,8 +565,13 @@ export function CRMApp() {
     if (!paymentModal) {
       return;
     }
+    if (!paymentAmount) {
+      setError("Informe o valor pago pelo cliente.");
+      return;
+    }
     try {
       await api.post(`/sales/installments/${paymentModal.id}/pay/`, {
+        amount_paid: normalizeCurrencyValue(paymentAmount),
         payment_method: paymentMethod,
       });
       setPaymentModal(null);
@@ -1076,19 +1114,31 @@ export function CRMApp() {
                             }
                           />
                         </div>
-                        <input
-                          className={inputClass}
-                          type="text"
-                          inputMode="numeric"
-                          placeholder="Preço de venda"
-                          value={saleDraftItem.salePrice}
-                          onChange={(event) =>
-                            setSaleDraftItem((current) => ({
-                              ...current,
-                              salePrice: formatCurrencyInput(event.target.value),
-                            }))
-                          }
-                        />
+                        <div>
+                          <input
+                            className={inputClass}
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="Preço de venda"
+                            value={saleDraftItem.salePrice}
+                            onChange={(event) =>
+                              setSaleDraftItem((current) => ({
+                                ...current,
+                                salePrice: formatCurrencyInput(event.target.value),
+                              }))
+                            }
+                          />
+                          {draftProduct?.purchase_price ? (
+                            <p className="mt-2 text-sm text-slate-500">
+                              Valor de compra: {formatCurrency(draftProduct.purchase_price)}
+                            </p>
+                          ) : null}
+                          {salePriceBelowPurchasePrice ? (
+                            <p className="mt-2 text-sm text-amber-700">
+                              Atenção: o valor de venda está menor que o valor de compra.
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                       <button type="button" className={`${buttonClass} mt-3`} onClick={addSaleItem}>
                         Adicionar item
@@ -1159,6 +1209,9 @@ export function CRMApp() {
                         </div>
                         <div className="text-right">
                           <p className="font-semibold">{formatCurrency(installment.amount)}</p>
+                          {Number(installment.paid_amount) > 0 ? (
+                            <p className="text-sm text-slate-500">Pago {formatCurrency(installment.paid_amount)}</p>
+                          ) : null}
                           <p className={`text-sm ${installment.is_overdue ? "text-rose-600" : "text-slate-500"}`}>
                             {installment.due_date}
                           </p>
@@ -1215,7 +1268,13 @@ export function CRMApp() {
                                 {installment.number}ª parcela · {installment.due_date}
                               </span>
                               <span className={installment.status === "paid" ? "text-emerald-600" : "text-slate-500"}>
-                                {installment.status === "paid" ? "Paga" : "Pendente"} · {formatCurrency(installment.amount)}
+                                {installment.status === "paid"
+                                  ? `Paga · ${formatCurrency(installment.paid_amount || installment.amount)}`
+                                  : `Pendente · Em aberto ${formatCurrency(installment.amount)}${
+                                      Number(installment.paid_amount) > 0
+                                        ? ` · Pago ${formatCurrency(installment.paid_amount)}`
+                                        : ""
+                                    }`}
                               </span>
                             </div>
                           ))}
@@ -1237,8 +1296,11 @@ export function CRMApp() {
           <div className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-2xl">
             <h3 className="text-lg font-bold">Dar baixa na parcela</h3>
             <p className="mt-2 text-sm text-slate-500">
-              Parcela {paymentModal.number} · Vencimento {paymentModal.due_date} · {formatCurrency(paymentModal.amount)}
+              Parcela {paymentModal.number} · Vencimento {paymentModal.due_date} · Em aberto {formatCurrency(paymentModal.amount)}
             </p>
+            {Number(paymentModal.paid_amount) > 0 ? (
+              <p className="mt-2 text-sm text-slate-500">Já pago: {formatCurrency(paymentModal.paid_amount)}</p>
+            ) : null}
             <select
               className={`${inputClass} mt-4`}
               value={paymentMethod}
@@ -1250,6 +1312,14 @@ export function CRMApp() {
               <option value="transfer">Transferência</option>
               <option value="other">Outro</option>
             </select>
+            <input
+              className={`${inputClass} mt-4`}
+              type="text"
+              inputMode="numeric"
+              placeholder="Valor pago"
+              value={paymentAmount}
+              onChange={(event) => setPaymentAmount(formatCurrencyInput(event.target.value))}
+            />
             <div className="mt-6 flex gap-3">
               <button type="button" className={buttonClass} onClick={quickPay}>
                 Confirmar pagamento

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from apps.inventory.models import Product
@@ -24,6 +26,7 @@ class InstallmentSerializer(serializers.ModelSerializer):
             "number",
             "due_date",
             "amount",
+            "paid_amount",
             "status",
             "payment_method",
             "paid_at",
@@ -86,4 +89,13 @@ class SaleSerializer(serializers.ModelSerializer):
 
 
 class InstallmentPaymentSerializer(serializers.Serializer):
+    amount_paid = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
     payment_method = serializers.ChoiceField(choices=Installment.PaymentMethods.choices)
+
+    def validate(self, attrs):
+        installment = self.context["installment"]
+        if installment.status == Installment.Status.PAID:
+            raise serializers.ValidationError("Esta parcela já foi quitada.")
+        if attrs["amount_paid"] > installment.amount:
+            raise serializers.ValidationError("O valor pago não pode ser maior que o valor em aberto da parcela.")
+        return attrs

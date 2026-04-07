@@ -51,7 +51,12 @@ class InstallmentViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=["post"], url_path="pay")
     def pay(self, request, pk=None):
         installment = self.get_object()
-        serializer = InstallmentPaymentSerializer(data=request.data)
+        serializer = InstallmentPaymentSerializer(data=request.data, context={"installment": installment})
         serializer.is_valid(raise_exception=True)
-        pay_installment(installment, serializer.validated_data["payment_method"], request.user)
-        return Response({"detail": "Parcela quitada com sucesso."})
+        pay_installment(
+            installment,
+            serializer.validated_data["payment_method"],
+            serializer.validated_data["amount_paid"],
+            request.user,
+        )
+        return Response({"detail": "Pagamento registrado com sucesso."})

@@ -65,6 +65,7 @@ class Installment(TimeStampedModel):
     number = models.PositiveIntegerField()
     due_date = models.DateField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     payment_method = models.CharField(
         max_length=20,

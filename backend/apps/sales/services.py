@@ -99,14 +99,21 @@ def cancel_sale(sale, actor):
 
 
 @transaction.atomic
-def pay_installment(installment, payment_method, actor):
-    installment.status = Installment.Status.PAID
+def pay_installment(installment, payment_method, amount_paid, actor):
+    if installment.status == Installment.Status.PAID:
+        raise ValueError("Esta parcela já foi quitada.")
+    if amount_paid > installment.amount:
+        raise ValueError("O valor pago não pode ser maior que o valor em aberto da parcela.")
+    remaining_amount = (installment.amount - amount_paid).quantize(Decimal("0.01"))
+    installment.amount = remaining_amount
+    installment.paid_amount = (installment.paid_amount + amount_paid).quantize(Decimal("0.01"))
+    installment.status = Installment.Status.PAID if remaining_amount == Decimal("0.00") else Installment.Status.PENDING
     installment.payment_method = payment_method
     installment.paid_at = timezone.now()
-    installment.save(update_fields=["status", "payment_method", "paid_at", "updated_at"])
+    installment.save(update_fields=["amount", "paid_amount", "status", "payment_method", "paid_at", "updated_at"])
     sale = installment.sale
     if not sale.installments.filter(status=Installment.Status.PENDING).exists():
         sale.status = Sale.Status.PAID
         sale.save(update_fields=["status", "updated_at"])
-    create_audit_log(actor, "payment", "installment", installment.id, f"Parcela {installment.id} paga")
+    create_audit_log(actor, "payment", "installment", installment.id, f"Pagamento de {amount_paid} na parcela {installment.id}")
     return installment
