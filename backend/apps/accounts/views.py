@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.accounts.serializers import (
     ChangePasswordSerializer,
@@ -17,6 +17,10 @@ from apps.core.utils import create_audit_log
 
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
+
+
+class RefreshView(TokenRefreshView):
+    pass
 
 
 class LogoutView(APIView):

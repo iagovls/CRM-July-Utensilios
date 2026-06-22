@@ -18,6 +18,7 @@ class SaleItemSerializer(serializers.ModelSerializer):
 
 class InstallmentSerializer(serializers.ModelSerializer):
     is_overdue = serializers.SerializerMethodField()
+    customer_name = serializers.CharField(source="sale.customer.name", read_only=True)
 
     class Meta:
         model = Installment
@@ -31,6 +32,7 @@ class InstallmentSerializer(serializers.ModelSerializer):
             "payment_method",
             "paid_at",
             "is_overdue",
+            "customer_name",
         ]
 
     def get_is_overdue(self, obj):
@@ -42,6 +44,10 @@ class SaleSerializer(serializers.ModelSerializer):
     installments = serializers.SerializerMethodField()
     customer_name = serializers.CharField(source="customer.name", read_only=True)
     profit = serializers.SerializerMethodField()
+    is_paid = serializers.BooleanField(write_only=True, required=False, default=False)
+    payment_method = serializers.ChoiceField(
+        choices=Installment.PaymentMethods.choices, write_only=True, required=False
+    )
 
     class Meta:
         model = Sale
@@ -58,6 +64,8 @@ class SaleSerializer(serializers.ModelSerializer):
             "items",
             "installments",
             "created_at",
+            "is_paid",
+            "payment_method",
         ]
         read_only_fields = ["status", "total_amount", "total_cost", "profit", "installments", "created_at"]
 

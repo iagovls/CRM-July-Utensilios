@@ -22,6 +22,8 @@ def next_month(date_value):
 @transaction.atomic
 def create_sale(validated_data, actor):
     items_data = validated_data.pop("items")
+    is_paid = validated_data.pop("is_paid", False)
+    payment_method = validated_data.pop("payment_method", Installment.PaymentMethods.OTHER)
     sale = Sale.objects.create(created_by=actor, **validated_data)
     total_amount = Decimal("0")
     total_cost = Decimal("0")
@@ -54,7 +56,11 @@ def create_sale(validated_data, actor):
 
     sale.total_amount = total_amount.quantize(Decimal("0.01"))
     sale.total_cost = total_cost.quantize(Decimal("0.01"))
-    sale.save(update_fields=["total_amount", "total_cost", "updated_at"])
+    
+    if is_paid:
+        sale.status = Sale.Status.PAID
+    
+    sale.save(update_fields=["total_amount", "total_cost", "status", "updated_at"])
 
     installments_count = sale.installments_count or 1
     base_amount = (sale.total_amount / installments_count).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -65,11 +71,20 @@ def create_sale(validated_data, actor):
         if number == installments_count:
             previous_total = base_amount * (installments_count - 1)
             amount = sale.total_amount - previous_total
+        
+        status = Installment.Status.PAID if is_paid else Installment.Status.PENDING
+        paid_amount = amount if is_paid else Decimal("0")
+        paid_at = timezone.now() if is_paid else None
+        
         Installment.objects.create(
             sale=sale,
             number=number,
             due_date=current_due_date,
             amount=amount,
+            status=status,
+            paid_amount=paid_amount,
+            paid_at=paid_at,
+            payment_method=payment_method if is_paid else Installment.PaymentMethods.OTHER,
         )
         current_due_date = next_month(current_due_date)
 
