@@ -1,6 +1,18 @@
 import api from "./api";
 import { AuthTokens, User } from "@/types";
 
+type ApiUser = Omit<User, "is_admin_role"> & {
+  role?: "admin" | "user";
+  is_admin_role?: boolean;
+};
+
+function normalizeUser(user: ApiUser): User {
+  return {
+    ...user,
+    is_admin_role: user.is_admin_role ?? user.role === "admin",
+  };
+}
+
 export const authService = {
   async login(username: string, password: string): Promise<AuthTokens> {
     const response = await api.post<AuthTokens>("/api/auth/login/", {
@@ -15,8 +27,8 @@ export const authService = {
   },
 
   async getMe(): Promise<User> {
-    const response = await api.get<User>("/api/auth/me/");
-    return response.data;
+    const response = await api.get<ApiUser>("/api/auth/me/");
+    return normalizeUser(response.data);
   },
 
   async changePassword(oldPassword: string, newPassword: string): Promise<void> {

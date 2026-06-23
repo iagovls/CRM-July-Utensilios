@@ -7,16 +7,18 @@ import Sidebar from "@/components/Sidebar";
 import DashboardPage from "./(dashboard)/page";
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.replace("/login");
+      } else if (!user?.is_admin_role) {
+        router.replace("/clientes");
       }
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, user]);
 
   if (isLoading) {
     return (
@@ -26,7 +28,7 @@ export default function Home() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user?.is_admin_role) {
     return null;
   }
 

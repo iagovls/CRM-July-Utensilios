@@ -18,11 +18,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 
 const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/", icon: LayoutDashboard, label: "Dashboard", adminOnly: true },
   { href: "/clientes", icon: Users, label: "Clientes" },
   { href: "/produtos", icon: Package, label: "Produtos" },
   { href: "/vendas", icon: ReceiptText, label: "Vendas" },
-  { href: "/financeiro", icon: Banknote, label: "Financeiro" },
+  { href: "/financeiro", icon: Banknote, label: "Financeiro", adminOnly: true },
 ];
 
 export default function Sidebar() {
@@ -30,6 +30,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || user?.is_admin_role);
 
   const handleLogout = async () => {
     await logout();
@@ -90,7 +91,7 @@ export default function Sidebar() {
         </span>
 
         <nav className="flex flex-col gap-2">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (

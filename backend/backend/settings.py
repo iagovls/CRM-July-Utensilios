@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR.parent / ".env")
+load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "crm-july-utensilios-dev-secret-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
@@ -64,7 +64,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-if os.getenv("DB_ENGINE", "sqlite").lower() == "postgres":
+if os.getenv("DB_ENGINE", "postgres").lower() in {"postgres", "postgresql"}:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

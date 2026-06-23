@@ -4,9 +4,10 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  role?: "admin" | "user";
   is_admin_role: boolean;
-  is_active: boolean;
-  last_login: string | null;
+  is_active?: boolean;
+  last_login?: string | null;
 }
 
 export interface AuthTokens {

@@ -1,23 +1,31 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
+
+const adminOnlyRoutes = new Set(["/", "/financeiro"]);
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/login");
+      return;
     }
-  }, [isLoading, isAuthenticated, router]);
+
+    if (!isLoading && isAuthenticated && adminOnlyRoutes.has(pathname) && !user?.is_admin_role) {
+      router.replace("/clientes");
+    }
+  }, [isLoading, isAuthenticated, pathname, router, user]);
 
   if (isLoading) {
     return (
@@ -28,6 +36,10 @@ export default function DashboardLayout({
   }
 
   if (!isAuthenticated) {
+    return null;
+  }
+
+  if (adminOnlyRoutes.has(pathname) && !user?.is_admin_role) {
     return null;
   }
 
