@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -10,7 +11,6 @@ import {
   ReceiptText,
   Banknote,
   CircleUserRound,
-  ChefHat,
   LogOut,
   Menu,
   X,
@@ -74,19 +74,14 @@ export default function Sidebar() {
           ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-[#FFDAD8] rounded-2xl flex items-center justify-center">
-            <ChefHat className="w-6 h-6 text-[#2A2933]" />
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[#2A2933] text-lg font-semibold font-['Inter']">
-              July Utensílios
-            </span>
-            <span className="text-[#616167] text-xs font-normal font-['Inter']">
-              CRM comercial
-            </span>
-          </div>
-        </div>
+        <Image
+          src="/logo.jpeg"
+          alt="July Utensílios"
+          width={180}
+          height={60}
+          priority
+          className="h-auto w-auto rounded-xl"
+        />
 
         <span className="text-[#939399] text-xs font-semibold font-['Inter']">
           Módulos
