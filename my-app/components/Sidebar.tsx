@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Users,
   Package,
+  Tag,
   ReceiptText,
   Banknote,
   CircleUserRound,
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/", icon: LayoutDashboard, label: "Dashboard", adminOnly: true },
   { href: "/clientes", icon: Users, label: "Clientes" },
   { href: "/produtos", icon: Package, label: "Produtos" },
+  { href: "/categorias", icon: Tag, label: "Categorias" },
   { href: "/vendas", icon: ReceiptText, label: "Vendas" },
   { href: "/financeiro", icon: Banknote, label: "Financeiro", adminOnly: true },
 ];
