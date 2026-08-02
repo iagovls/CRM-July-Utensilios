@@ -1,0 +1,14 @@
+﻿
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "A", "location": "middleware.ts:37", "msg": "[DEBUG] middleware entry", "data": {"path": "/", "hasUser": true}, "ts": 1785652681093}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "C", "location": "app/page.tsx:14", "msg": "[DEBUG] home effect", "data": {"isAuthenticated": false, "isLoading": true, "isAdmin": false}, "ts": 1785652681296}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "C", "location": "AuthContext.tsx:45", "msg": "[DEBUG] initAuth start", "data": {}, "ts": 1785652681297}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "C", "location": "AuthContext.tsx:26", "msg": "[DEBUG] refreshUser start", "data": {}, "ts": 1785652681297}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "A", "location": "middleware.ts:37", "msg": "[DEBUG] middleware entry", "data": {"path": "/@vite/client", "hasUser": true}, "ts": 1785652681371}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "C", "location": "AuthContext.tsx:34", "msg": "[DEBUG] refreshUser failed", "data": {"error": "Cannot read properties of undefined (reading 'rest')"}, "ts": 1785652681489}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "C", "location": "AuthContext.tsx:50", "msg": "[DEBUG] initAuth finished", "data": {"cancelled": false}, "ts": 1785652681489}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "C", "location": "app/page.tsx:14", "msg": "[DEBUG] home effect", "data": {"isAuthenticated": false, "isLoading": false, "isAdmin": false}, "ts": 1785652681491}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "B", "location": "app/page.tsx:18", "msg": "[DEBUG] home redirect to login", "data": {}, "ts": 1785652681491}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "C", "location": "app/page.tsx:28", "msg": "[DEBUG] home would render null", "data": {"isAuthenticated": false, "isAdmin": false}, "ts": 1785652681493}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "A", "location": "middleware.ts:37", "msg": "[DEBUG] middleware entry", "data": {"path": "/login", "hasUser": true}, "ts": 1785652681575}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "A", "location": "middleware.ts:73", "msg": "[DEBUG] redirect authenticated user away from login", "data": {"path": "/login", "next": null}, "ts": 1785652681575}
+{"sessionId": "blank-html-login", "runId": "pre-fix", "hypothesisId": "A", "location": "middleware.ts:37", "msg": "[DEBUG] middleware entry", "data": {"path": "/", "hasUser": true}, "ts": 1785652681692}
