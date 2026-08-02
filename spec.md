@@ -1,101 +1,174 @@
-# Especificação do Projeto: CRM July Utensílios
+# Especificacao do Projeto: CRM July Utensilios
 
-## 1. Visão Geral
-Este sistema é um CRM (Customer Relationship Management) desenvolvido em Django e PostgreSQL, focado no gerenciamento de clientes, produtos, vendas e controle financeiro.
+## 1. Visao Geral
+Este sistema e um CRM (Customer Relationship Management) full-stack baseado em Next.js e Supabase, focado no gerenciamento de clientes, produtos, vendas e controle financeiro. Deploy na Vercel com banco de dados PostgreSQL gerenciado pelo Supabase.
 
 ## 2. Tecnologias
-- **Backend:** Django 5.x + Django REST Framework (DRF)
-- **Banco de Dados:** PostgreSQL
-- **Frontend:** Next.js (App Router) + Tailwind CSS + Lucide React (Ícones)
-- **Autenticação:** JWT (JSON Web Tokens) via `djangorestframework-simplejwt`
-- **Infraestrutura:** Docker & Docker Compose
-- **Segurança:** Senhas criptografadas (hashing) no banco de dados utilizando os padrões do Django (PBKDF2 por padrão)
-- **Ambiente:** Variáveis de ambiente (`.env`) para chaves e credenciais
+- **Frontend & Backend (Full-stack):** Next.js 16+ (App Router) + React 19 + TypeScript
+- **Banco de Dados:** PostgreSQL via Supabase (com RLS habilitado em todas as tabelas do CRM)
+- **Autenticacao:** Supabase Auth (email/senha, OAuth, magic links - gerenciaveis via dashboard Supabase)
+- **Estilizacao:** Tailwind CSS 4
+- **Icones:** lucide-react
+- **ORM/Cliente DB:** @supabase/supabase-js + @supabase/ssr (App Router Server Components)
+- **Gerenciamento de Sessao:** Cookies HTTP (via middleware Next.js, SSR seguro)
+- **Deploy:** Vercel (Next.js otimizado para edge + serverless)
+- **Armazenamento de Arquivos:** Supabase Storage (futuro: imagens de produtos)
+- **Seguranca:** Row Level Security (RLS) em todas as tabelas; politicas por role (admin/user)
+- **Ambiente:** Variaveis de ambiente (`.env.local` / Vercel env vars)
 
-## 3. Módulos e Funcionalidades
+## 3. Modulos e Funcionalidades
 
-### 3.1. Gestão de Usuários e Permissões
-- **Papéis (Roles):**
-  - **Admin:** Acesso total ao sistema (cadastros, vendas, dashboard financeiro, gestão de usuários).
-  - **User:** Acesso restrito (cadastros de clientes, produtos e realização de vendas, sem acesso a dados financeiros sensíveis ou exclusão de registros).
-- **Autenticação:** Login (JWT), Logout e alteração de senha.
-- **Audit Log:** Registro de "quem fez o quê" (ex: "Usuário X alterou o preço do produto Y").
+### 3.1. Gestao de Usuarios e Permissoes
+- **Usuarios:** Gerenciados via `auth.users` do Supabase. Perfil estendido em `public.user_profiles` (1:1)
+- **Papeis (Roles):** Enum `user_role` = `admin` | `user`
+  - **Admin:** Acesso total ao sistema (cadastros, vendas, dashboard financeiro, gestao de usuarios, exclusao via soft delete, auditoria).
+  - **User:** Acesso restrito (cadastros de clientes, produtos e realizacao de vendas, baixa de parcelas; SEM acesso a dados financeiros sensiveis ou exclusao de registros).
+- **Atribuicao de role:** Definida via `auth.users.raw_app_meta_data->>'role'` no momento da criacao (Supabase dashboard / API administrativa). Trigger `on_auth_user_created` replica automaticamente para `public.user_profiles.role`.
+- **Autenticacao:** Login, Logout e sessao persistida via cookies (middleware `updateSession`).
+- **Audit Log:** Tabela `public.audit_logs` com triggers automáticos em INSERT/UPDATE/DELETE nas tabelas criticas (`clients`, `categories`, `products`, `sales`, `sale_items`, `installments`). Apenas ADMIN le.
 
 ### 3.2. Cadastro de Clientes
-- Campos: Nome, CPF/CNPJ, E-mail, Telefone, Endereço completo.
-- **Observação:** Todos os campos, exceto o ID, podem ser nulos no banco de dados.
-- **Política de Exclusão:** Soft Delete (campo `is_active` ou `deleted_at`) para preservar histórico de vendas.
-- Histórico de compras por cliente.
+- Tabela: `public.clients` (Soft Delete: `is_active` + `deleted_at`)
+- Campos: `name`, `document` (CPF/CNPJ), `email`, `phone`, `address`
+- **Politica:** Todos os campos, exceto `id`, sao nulos no banco de dados (compatibilidade com especificacao original).
+- **Ordenacao default:** `name ASC, id ASC`
+- Historico de compras por cliente: obtido via FK `sales.customer_id -> clients.id`
 
 ### 3.3. Cadastro de Produtos
-- Campos: Nome, Descrição, Preço de Compra, Quantidade em Estoque, Categoria (Sugerido).
-- **Observação:** Todos os campos, exceto o ID, podem ser nulos no banco de dados.
-- **Fotos:** Possibilidade de adicionar múltiplas fotos para cada produto.
-- **Política de Exclusão:** Soft Delete para preservar dados de vendas passadas.
-- **Estoque Automático:**
-  - **Baixa Automática:** Redução imediata ao realizar uma venda.
-  - **Estorno:** Retorno ao estoque caso uma venda seja cancelada.
-- **Movimentação de Estoque:** Registro de entradas e saídas.
+- Tabelas: `public.products` + `public.categories` + `public.product_images` (Soft Delete em products e categories)
+- **Produto:** `name`, `description`, `purchase_price` (numeric 10,2), `stock_quantity`, `category_id` FK -> categories, `category` (text livre, duplicado para facilitar queries sem join)
+- **Categorias:** `name` UNIQUE (apenas ativos)
+- **Fotos:** `product_images.product_id` FK + `image_url` (usa Supabase Storage no futuro)
+- **Estoque Automatico (a implementar via Server Actions / funcoes Postgres):**
+  - **Baixa Automatica:** Ao criar uma venda aprovada
+  - **Estorno:** Retorno ao estoque caso uma venda seja cancelada
+- **Movimentacao de Estoque:** `public.stock_movements` com FK para `products`, tipo `stock_movement_type` (entry | sale | reversal), `actor_id` (quem fez) e `created_at` DESC
 
 ### 3.4. Vendas e Parcelamento
-- Seleção de Cliente e Produto.
-- **Preço de Venda:** Definido no momento da venda.
-- **Parcelamento:**
-  - Número de parcelas e data da primeira parcela.
-  - **Botão de Baixa:** Modal rápido para marcar parcelas como "Paga".
-  - **Método de Pagamento:** Registrar se foi Dinheiro, Cartão, Pix, etc.
-- Status da Venda: Pendente, Paga, Cancelada.
+- Tabelas: `public.sales` + `public.sale_items` + `public.installments`
+- **Venda (Sale):**
+  - `customer_id` FK -> clients (nullable SET NULL)
+  - `status` enum: pending | paid | canceled (default pending)
+  - `installments_count` (default 1)
+  - `first_due_date` (date, obrigatorio)
+  - `total_amount` / `total_cost` (numeric 12,2)
+  - `created_by_id` FK -> user_profiles (autor da venda)
+- **Item de Venda (SaleItem):**
+  - `sale_id` FK, `product_id` FK PROTECT (nao deleta produto com venda), `quantity`, `sale_price`, `purchase_price`
+- **Parcelas (Installments):**
+  - UNIQUE `(sale_id, number)`
+  - `due_date`, `amount`, `paid_amount` (default 0), `status` (pending|paid), `payment_method` (cash|card|pix|transfer|other), `paid_at` timestamptz
+  - **Botao de Baixa:** Atualiza `status='paid'`, `paid_amount=amount`, `paid_at=now()`, `payment_method`
 
 ### 3.5. Dashboard Financeiro
-- **Filtros:** Busca por período.
-- **Visão Mensal:** Histórico de entradas e saídas.
-- **Lucro Real:** Cálculo de `Preço de Venda - Preço de Compra`.
-- **Inadimplência:** Clientes com qualquer parcela vencida e não paga.
-- **Gráficos:** Visualização de lucros e faturamento.
+- Obtido via queries agregadas em `sales` + `installments`
+- **Filtros:** Busca por periodo (`created_at`, `due_date`)
+- **Visao Mensal:** Historico de entradas e saidas
+- **Lucro Real:** `SUM(sale_items.sale_price - sale_items.purchase_price)` por periodo
+- **Inadimplencia:** `installments` com `due_date < today` AND `status = 'pending'`
+- **Gráficos:** Recomendacao: Recharts (frontend) sobre dados agregados via Supabase RPC ou query agregada no Server Component
 
 ### 3.6. Interface (UI/UX)
-- **Máscaras de Input:** CPF/CNPJ, Telefone e Moeda (R$).
-- **Validação Real-time:** Alertas imediatos (ex: CPF inválido) antes da submissão.
+- **Mascaras de Input:** CPF/CNPJ, Telefone e Moeda (R$). (Ja existentes parcialmente no frontend via componentes; manter)
+- **Validacao Real-time:** Alertas imediatos (ex: CPF invalido) antes da submissao.
 
-## 4. Definição da API RESTful
+## 4. Modelo de Dados (Esquema Logico)
+```
+auth.users (Supabase built-in)
+   |--1:1--> public.user_profiles (id FK uuid, role enum)
+                    |
+                    |--<FK----> audit_logs.actor_id
+                    |--<FK----> stock_movements.actor_id
+                    |--<FK----> sales.created_by_id
 
-### 4.1. Endpoints Principais
-| Recurso | Método | Endpoint | Descrição |
-| :--- | :--- | :--- | :--- |
-| **Autenticação** | POST | `/api/auth/login/` | Realiza login e retorna token/sessão |
-| | POST | `/api/auth/logout/` | Encerra a sessão |
-| **Clientes** | GET | `/api/clients/` | Lista todos os clientes |
-| | POST | `/api/clients/` | Cria um novo cliente |
-| | GET | `/api/clients/{id}/` | Detalhes de um cliente |
-| | PUT/PATCH | `/api/clients/{id}/` | Atualiza um cliente |
-| | DELETE | `/api/clients/{id}/` | Remove um cliente |
-| **Produtos** | GET | `/api/products/` | Lista todos os produtos |
-| | POST | `/api/products/` | Cria um novo produto |
-| | GET | `/api/products/{id}/` | Detalhes de um produto |
-| | PUT/PATCH | `/api/products/{id}/` | Atualiza um produto |
-| | DELETE | `/api/products/{id}/` | Remove um produto |
-| **Vendas** | GET | `/api/sales/` | Lista todas as vendas |
-| | POST | `/api/sales/` | Registra uma nova venda e gera parcelas |
-| **Financeiro** | GET | `/api/dashboard/summary/` | Dados resumidos para o dashboard |
-| | GET | `/api/dashboard/overdue/` | Lista de parcelas inadimplentes |
+public.clients (Soft Delete)
+   |--<FK----> sales.customer_id
 
-### 4.2. Códigos de Status HTTP (RESTful)
-- **200 OK:** Requisição bem-sucedida.
-- **201 Created:** Recurso criado com sucesso (ex: novo cliente/venda).
-- **204 No Content:** Recurso removido com sucesso.
-- **400 Bad Request:** Erro na requisição (dados inválidos).
-- **401 Unauthorized:** Usuário não autenticado.
-- **403 Forbidden:** Usuário sem permissão (ex: User tentando acessar Admin).
-- **404 Not Found:** Recurso não encontrado.
-- **500 Internal Server Error:** Erro inesperado no servidor.
+public.categories (Soft Delete)
+   |--<FK----> products.category_id
 
-## 4. Requisitos Não Funcionais
-- Design responsivo para uso em dispositivos móveis.
-- Validação de CPF/CNPJ.
-- Logs de atividades críticas (ex: exclusão de vendas).
+public.products (Soft Delete)
+   |--<FK----> product_images.product_id (CASCADE)
+   |--<FK----> stock_movements.product_id (CASCADE)
+   |--<PROTECT>- sale_items.product_id
+   |--<FK----> (indireto via sale_items -> sales) clients
 
-## 5. Sugestões de Melhorias (Para discussão)
-- **Notificações de Vencimento:** Alerta visual no dashboard para parcelas que vencem hoje ou amanhã.
-- **Busca Global:** Barra de busca no topo para encontrar clientes ou produtos rapidamente.
-- **Log de Auditoria:** Registrar quem realizou cada venda ou alteração no sistema.
-- **Backup:** Rotina de backup do banco de dados PostgreSQL.
+public.sales
+   |--<FK----> sale_items.sale_id (CASCADE)
+   |--<FK----> installments.sale_id (CASCADE)
+
+public.installments UNIQUE(sale_id, number)
+
+public.audit_logs (INSERT triggerada automaticamente)
+```
+
+Todas as tabelas publicas do CRM possuem `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`. Politicas separadas para Admin (ALL) e User (restrito: read+insert+update de ativos, sem DELETE fisico). Soft delete controlado via `is_active` e `deleted_at` em clients/categories/products.
+
+## 5. Infraestrutura e Deploy
+
+### 5.1. Vercel (Frontend + Serverless Functions)
+- Repositorio: Raiz `/my-app` (Next.js)
+- Variaveis de ambiente a configurar no painel da Vercel (iguais a `.env.example`):
+  - `NEXT_PUBLIC_SUPABASE_URL` = `https://hfpraktybxnafyixbmqa.supabase.co`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = `<anon key>` (publicavel)
+- Build command: `next build` (output otimizado serverless + edge)
+- Middleware `middleware.ts` intercepta requests:
+  - Rotas `/dashboard/*` exigem sessao valida -> redirect para `/login`
+  - Rota `/login` com sessao valida -> redirect `/dashboard`
+  - Atualiza cookies de sessao Supabase (refresh token transparente)
+
+### 5.2. Supabase (Banco + Auth + Storage)
+- Provisionado via dashboard Supabase
+- Migrations versionadas: `supabase/migrations/*.sql` (inicial: `20260802000000_init_crm_schema.sql`)
+- Registro de migrations aplicaveis: `apply_migration` MCP ou `supabase db push` CLI
+- Tipos TypeScript gerados automaticamente: `my-app/types/supabase.ts` (Database, Tables, Enums, etc.)
+- Clients:
+  - Browser: `lib/supabase/client.ts` (`createBrowserClient`)
+  - Server Components/Route Handlers: `lib/supabase/server.ts` (`createServerClient` com cookies)
+
+## 6. Seguranca: RLS + Roles
+Funcoes auxiliares (imutaveis, STABLE, SECURITY DEFINER):
+- `public.get_current_user_role()`: retorna `user_profiles.role` do auth.uid atual
+- `public.is_admin()`: true se `role='admin'` OU `auth.users.raw_app_meta_data->>'role'='admin'`
+
+Padrao de politicas (todas as tabelas CRM):
+1. **SELECT admin** + **SELECT authenticated on is_active=true** (exceto user_profiles: so mesmo usuario ve o proprio)
+2. **ALL para admin** (policy `*_admin_all` USING is_admin())
+3. **INSERT/UPDATE para user autenticado** (sem DELETE - soft delete apenas para admin)
+
+Auditoria: triggers `*_audit` em INSERT/UPDATE/DELETE gravam `public.audit_logs` (apenas admin visualiza via policy).
+
+## 7. Definicao de API (substituicao do Django DRF)
+Nao existe mais backend separado. Tudo e resolvido via:
+- **Server Components** (App Router) que consultam Supabase diretamente (via `lib/supabase/server.ts`) e renderizam HTML seguro.
+- **Route Handlers** (`app/api/**/route.ts`) - opcional quando logica de negocio complexa (RPC, baixa de parcela com atualizacao de estoque, etc).
+- **Client-side Mutations** usando Server Actions (`'use server'`) ou `createClient()` browser com RLS garantindo permissoes.
+
+Exemplos de operacoes / equivalencia a antiga API REST:
+
+| Recurso | Como fazer na nova arquitetura |
+| :--- | :--- |
+| **Auth login** | `supabase.auth.signInWithPassword({email, password})` (client) |
+| **Auth logout** | `supabase.auth.signOut()` + redirect |
+| **Auth me** | Server Component: `(await supabase.auth.getUser())` + JOIN `user_profiles` |
+| **Listar clientes ativos** | `supabase.from('clients').select().eq('is_active', true).order('name')` |
+| **Criar cliente** | `supabase.from('clients').insert({...}).select()` (RLS garante auth) |
+| **Editar cliente** | `supabase.from('clients').update({...}).eq('id', id)` |
+| **Soft delete cliente (ADMIN)** | `update({is_active:false, deleted_at:'now()'}).eq('id', id)` (admin) |
+| **Criar venda + parcelas** | Server Action / Route Handler: transacao em SQL ou multiplos inserts |
+| **Dashboard resumo** | SQL agregado (GROUP BY month) via `.rpc(...)` ou query multi-select |
+| **Inadimplentes** | `from('installments').select('*, sales(*)').lt('due_date', today).eq('status','pending')` |
+
+Status HTTP / erros: tratados via Supabase `{ error }` de cada chamada e componentes de UI.
+
+## 8. Requisitos Nao Funcionais
+- Design responsivo para uso em dispositivos moveis.
+- Validacao de CPF/CNPJ (frontend + opcionalmente banco).
+- Logs de atividades criticas via `public.audit_logs` (triggers automaticos).
+- Migracoes versionadas em `supabase/migrations/` - NUNCA alterar schema manualmente no dashboard sem migrar.
+
+## 9. Sugestoes de Melhorias
+- **Notificacoes de Vencimento:** Supabase Edge Functions + cron (pg_cron ja instalavel no dashboard) ou Supabase Realtime + toast no frontend.
+- **Busca Global:** Supabase pg_trgm (extensao ja disponivel) + `text %> 'query'` em clients/products
+- **Backup:** Supabase ja faz PITR automatico (em plano pago). Exportar dumps CSV periodicamente via dashboard.
+- **Upload de imagens:** Criar bucket `product-images` no Supabase Storage e politica RLS associada.

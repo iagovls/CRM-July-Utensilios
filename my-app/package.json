@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.111.0",
     "asynckit": "^0.5.0",
     "axios": "^1.15.0",
     "lightningcss": "^1.32.0",
