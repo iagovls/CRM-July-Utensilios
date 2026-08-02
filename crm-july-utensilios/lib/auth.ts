@@ -96,12 +96,20 @@ export const authService = {
     if (error) throw error;
 
     const pid = await getCurrentProjectId();
-    const { data: isMember, error: memberErr } = await (
-      supabase.rpc as unknown as (
-        fn: string,
-        args?: Record<string, unknown>
-      ) => Promise<{ data: unknown; error: unknown }>
-    )("is_project_member", { pid });
+    const callRpc = (
+      fn: string,
+      args?: Record<string, unknown>
+    ) => {
+      const builder = supabase.rpc(
+        fn,
+        args as Record<string, unknown>,
+      ) as unknown as Promise<Awaited<ReturnType<typeof supabase.rpc>>>;
+      return builder.then(
+        (result) =>
+          (result as unknown) as { data: unknown; error: unknown },
+      );
+    };
+    const { data: isMember, error: memberErr } = await callRpc("is_project_member", { pid });
     if (memberErr) {
       void supabase.auth.signOut().catch(() => undefined);
       throw memberErr as Error;
@@ -143,8 +151,16 @@ export const authService = {
     const callRpc = (
       fn: string,
       args?: Record<string, unknown>
-    ): Promise<{ data: unknown; error: unknown }> =>
-      supabase.rpc(fn, args) as Promise<{ data: unknown; error: unknown }>;
+    ) => {
+      const builder = supabase.rpc(
+        fn,
+        args as Record<string, unknown>,
+      ) as unknown as Promise<Awaited<ReturnType<typeof supabase.rpc>>>;
+      return builder.then(
+        (result) =>
+          (result as unknown) as { data: unknown; error: unknown },
+      );
+    };
 
     const [{ data: isMember, error: memberErr }, { data: projectRole, error: roleErr }] =
       await Promise.all([
