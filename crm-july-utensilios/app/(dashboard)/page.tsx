@@ -26,16 +26,13 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-pulse text-[#616167]">Carregando...</div>
       </div>
     );
-    
   }
-  
-  console.log("loading"	);
+
   const maxRevenue = data?.monthly
     ? Math.max(...data.monthly.map((m) => parseFloat(m.revenue)))
     : 0;

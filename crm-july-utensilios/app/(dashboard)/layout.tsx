@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
 
-const adminOnlyRoutes = new Set(["/", "/financeiro"]);
+const adminOnlyRoutes = new Set(["/financeiro"]);
 
 export default function DashboardLayout({
   children,
