@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2, Package } from "lucide-react";
-import TopBar from "@/components/TopBar";
 import Modal from "@/components/Modal";
 import Input, { Textarea, Select } from "@/components/Input";
 import { Product, Category } from "@/types";
@@ -152,12 +151,12 @@ export default function ProdutosPage() {
   };
 
   return (
-    <div className="clip rounded-[32px] bg-white p-4 md:p-8 flex flex-col gap-5 h-full overflow-hidden">
-      <TopBar
+    <div className="clip rounded-xl bg-white p-4 md:p-8 flex flex-col gap-5 h-full overflow-hidden">
+      {/* <TopBar
         title="Produtos"
         subtitle="Catálogo, estoque e margem por item."
         onSearch={setSearchQuery}
-      />
+      /> */}
 
       <div className="flex items-center gap-2 flex-wrap">
         <button

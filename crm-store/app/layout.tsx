@@ -58,13 +58,19 @@ async function AppShell({
   children: React.ReactNode;
 }) {
   const claims = await getUserClaims();
+  const isLoggedIn = !!claims?.sub;
   const displayName = getDisplayName(claims);
+
+  if (!isLoggedIn) {
+    return <>{children}</>;
+  }
+
   return (
-    <div className="min-h-screen bg-[#F8F6F4] flex p-3 gap-2 rounded-xl">
+    <div className="min-h-screen bg-[#F8F6F4] flex md:p-3 md:gap-2 rounded-xl overflow-x-hidden">
       <Sidebar displayName={displayName}>
         <AuthButton />
       </Sidebar>
-      <main className="flex-1 flex flex-col gap-5 pt-14 lg:pt-0 ">
+      <main className="flex-1 flex flex-col gap-5 pt-14 px-2 lg:pt-0 min-w-0">
         {children}
       </main>
     </div>

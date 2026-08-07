@@ -3,6 +3,7 @@
 import Input, { Select } from "@/components/Input";
 import KPICard from "@/components/KPICard";
 import Modal from "@/components/Modal";
+import SalesTabs, { type SalesTabKey } from "@/components/SalesTabs";
 import { Button } from "@/components/ui/button";
 import { clientService } from "@/lib/services/clients";
 import { installmentService } from "@/lib/services/installments";
@@ -10,7 +11,7 @@ import { productService } from "@/lib/services/products";
 import { saleService } from "@/lib/services/sales";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { Client, Installment, Product, Sale, SaleFormData } from "@/types";
-import { Banknote, CreditCard, Eye, History, Plus, XCircle } from "lucide-react";
+import { Banknote, CreditCard, Plus, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function VendasPage() {
@@ -37,9 +38,7 @@ export default function VendasPage() {
   });
   const [saleType, setSaleType] = useState<"vista" | "prazo">("vista");
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "vendas" | "parcelas" | "historico"
-  >("vendas");
+  const [activeTab, setActiveTab] = useState<SalesTabKey>("vendas");
 
   async function fetchData() {
     try {
@@ -70,12 +69,6 @@ export default function VendasPage() {
       await fetchData();
     })();
   }, []);
-
-  const filteredSales = sales.filter(
-    (sale) =>
-      sale.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(sale.id).includes(searchQuery),
-  );
 
   const pendingInstallments = installments.filter(
     (i) => i.status === "pending",
@@ -263,208 +256,16 @@ export default function VendasPage() {
         />
       </div>
 
-      <div className="flex gap-2 border-b border-[#E8E1DF] pb-2">
-        <button
-          onClick={() => setActiveTab("vendas")}
-          className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-            activeTab === "vendas"
-              ? "bg-[#FFDAD8] text-[#2A2933]"
-              : "text-[#616167] hover:bg-[#F8F6F4]"
-          }`}
-        >
-          Vendas
-        </button>
-        <button
-          onClick={() => setActiveTab("parcelas")}
-          className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-            activeTab === "parcelas"
-              ? "bg-[#FFDAD8] text-[#2A2933]"
-              : "text-[#616167] hover:bg-[#F8F6F4]"
-          }`}
-        >
-          Parcelas em aberto
-          {pendingInstallments.length > 0 && (
-            <span className="ml-2 bg-[#C23A2E] text-white text-xs px-2 py-0.5 rounded-full">
-              {pendingInstallments.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("historico")}
-          className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-            activeTab === "historico"
-              ? "bg-[#FFDAD8] text-[#2A2933]"
-              : "text-[#616167] hover:bg-[#F8F6F4]"
-          }`}
-        >
-          <History className="w-4 h-4 inline mr-1" />
-          Histórico
-        </button>
-      </div>
-
-      <div className="flex-1 bg-[#F8F6F4] rounded-[28px] p-4 md:p-6 flex flex-col gap-4 overflow-auto">
-        {loading ? (
-          <div className="flex-1 flex items-center justify-center text-[#616167]">
-            Carregando...
-          </div>
-        ) : activeTab === "vendas" ? (
-          <>
-            <h2 className="text-[#2A2933] text-lg font-bold font-['Inter']">
-              Vendas recentes
-            </h2>
-            {filteredSales.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-[#616167]">
-                Nenhuma venda encontrada.
-              </div>
-            ) : (
-              filteredSales.map((sale) => (
-                <div
-                  key={sale.id}
-                  className="flex items-center justify-between bg-white rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer"
-                  onClick={() => handleViewSale(sale)}
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[#2A2933] text-sm font-semibold font-['Inter']">
-                      #{sale.id} - {sale.customer_name || "Sem cliente"}
-                    </span>
-                    <span className="text-[#616167] text-xs font-normal">
-                      {sale.items.length} item(s) - {sale.installments_count}x
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[#2A2933] text-lg font-bold font-['Inter']">
-                      {formatCurrency(sale.total_amount)}
-                    </span>
-                    <span
-                      className="text-sm font-semibold font-['Inter'] px-2 py-1 rounded-full"
-                      style={{
-                        color: "white",
-                        backgroundColor: getStatusColor(sale.status),
-                      }}
-                    >
-                      {sale.status === "paid"
-                        ? "Paga"
-                        : sale.status === "pending"
-                          ? "Pendente"
-                          : "Cancelada"}
-                    </span>
-                    <Eye className="w-5 h-5 text-[#939399]" />
-                  </div>
-                </div>
-              ))
-            )}
-          </>
-        ) : activeTab === "parcelas" ? (
-          <>
-            <h2 className="text-[#2A2933] text-lg font-bold font-['Inter']">
-              Parcelas em aberto
-            </h2>
-            {pendingInstallments.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-[#616167]">
-                Nenhuma parcela em aberto! 🎉
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {pendingInstallments.map((inst) => (
-                  <div
-                    key={inst.id}
-                    onClick={() => handleInstallmentClick(inst)}
-                    className={`bg-white rounded-xl p-4 cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] ${
-                      inst.is_overdue
-                        ? "border-l-4 border-[#C23A2E]"
-                        : "border-l-4 border-[#008A4E]"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#2A2933] text-sm font-semibold">
-                        {inst.customer_name || "Sem cliente"}
-                      </span>
-                      <span
-                        className="text-sm font-bold"
-                        style={{
-                          color: getStatusColor(
-                            inst.is_overdue ? "canceled" : inst.status,
-                          ),
-                        }}
-                      >
-                        {formatCurrency(inst.amount)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[#616167] text-xs font-medium">
-                        #{inst.number} - Venda {inst.sale}
-                      </span>
-                      {inst.is_overdue ? (
-                        <span className="text-[#C23A2E] text-[10px] font-bold uppercase tracking-wider">
-                          Em atraso
-                        </span>
-                      ) : (
-                        <span className="text-[#939399] text-[10px] font-bold uppercase tracking-wider">
-                          Pendente
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#F8F6F4]">
-                      <span className="text-[#616167] text-xs">
-                        Venc: {formatDate(inst.due_date)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <h2 className="text-[#2A2933] text-lg font-bold font-['Inter']">
-              Histórico de vendas finalizadas
-            </h2>
-            {paidInstallments.length === 0 &&
-            sales.filter((s) => s.status !== "pending").length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-[#616167]">
-                Nenhum registro encontrado.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 overflow-auto">
-                {sales
-                  .filter((sale) => sale.status !== "pending")
-                  .map((sale) => (
-                    <div
-                      key={sale.id}
-                      className="flex items-center justify-between bg-white rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer"
-                      onClick={() => handleViewSale(sale)}
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-[#2A2933] text-sm font-semibold font-['Inter']">
-                          #{sale.id} - {sale.customer_name || "Sem cliente"}
-                        </span>
-                        <span className="text-[#616167] text-xs">
-                          {formatDate(sale.created_at)} -{" "}
-                          {sale.installments_count}x
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-[#2A2933] font-bold">
-                          {formatCurrency(sale.total_amount)}
-                        </span>
-                        <span
-                          className="text-sm font-semibold px-2 py-1 rounded-full"
-                          style={{
-                            color: "white",
-                            backgroundColor: getStatusColor(sale.status),
-                          }}
-                        >
-                          {sale.status === "paid" ? "Paga" : "Cancelada"}
-                        </span>
-                        <Eye className="w-5 h-5 text-[#939399]" />
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      <SalesTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        loading={loading}
+        sales={sales}
+        installments={installments}
+        searchQuery={searchQuery}
+        onViewSale={handleViewSale}
+        onClickInstallment={handleInstallmentClick}
+      />
 
       <Button className="self-end" onClick={handleOpenNewSale}>
         <div className="flex items-center gap-2">

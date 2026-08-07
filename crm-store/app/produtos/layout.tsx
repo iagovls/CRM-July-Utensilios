@@ -1,3 +1,4 @@
+import TopBar from "@/components/TopBar";
 import { Suspense } from "react";
 
 export const metadata = {
@@ -17,6 +18,10 @@ export default async function ProdutosLayout({
         </div>
       }
     >
+      <TopBar
+        title="Produtos"
+        subtitle="Catálogo, estoque e margem por item."
+      />
       {children}
     </Suspense>
   );

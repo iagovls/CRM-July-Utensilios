@@ -14,7 +14,7 @@ interface TopBarProps {
 export default function TopBar({
   title,
   subtitle,
-  showSearch = true,
+  showSearch = false,
   searchPlaceholder = "Buscar cliente, venda ou produto",
   onSearch,
 }: TopBarProps) {

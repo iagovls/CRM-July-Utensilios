@@ -141,16 +141,8 @@ export default function ClientesPage() {
                   <span className="text-[#2A2933] text-sm font-semibold font-['Inter']">
                     {client.name || "Sem nome"}
                   </span>
-                  <span className="text-[#616167] text-sm font-normal font-['Inter']">
-                    {client.document
-                      ? formatDocument(client.document)
-                      : client.email || "-"}
-                  </span>
-                  {client.phone && (
-                    <span className="text-[#616167] text-xs font-normal font-['Inter']">
-                      {formatPhone(client.phone)}
-                    </span>
-                  )}
+
+
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-[#2A2933] text-sm font-semibold font-['Inter']">
