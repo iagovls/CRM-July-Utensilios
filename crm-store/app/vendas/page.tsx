@@ -10,7 +10,7 @@ import { productService } from "@/lib/services/products";
 import { saleService } from "@/lib/services/sales";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { Client, Installment, Product, Sale, SaleFormData } from "@/types";
-import { Banknote, CreditCard, History, Plus, XCircle } from "lucide-react";
+import { Banknote, CreditCard, Eye, History, Plus, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function VendasPage() {

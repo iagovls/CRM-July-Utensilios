@@ -23,13 +23,11 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const claims = await getUserClaims();
-    const displayName = getDisplayName(claims);
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
@@ -39,25 +37,36 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-
-              <div className="min-h-screen bg-[#F8F6F4] flex p-3 gap-2 rounded-xl">
-                <Sidebar displayName={displayName}>
-                  <Suspense
-                    fallback={
-                      <div className="text-sm text-[#939399] font-['Inter'] px-3 py-2">
-                        Carregando...
-                      </div>
-                    }
-                  >
-                    <AuthButton />
-                  </Suspense>
-                </Sidebar>
-                <main className="flex-1 flex flex-col gap-5 pt-14 lg:pt-0 ">
-                  {children}
-                </main>
+          <Suspense
+            fallback={
+              <div className="text-sm text-[#939399] font-['Inter'] px-3 py-2">
+                Carregando...
               </div>
+            }
+          >
+            <AppShell>{children}</AppShell>
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>
+  );
+}
+
+async function AppShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const claims = await getUserClaims();
+  const displayName = getDisplayName(claims);
+  return (
+    <div className="min-h-screen bg-[#F8F6F4] flex p-3 gap-2 rounded-xl">
+      <Sidebar displayName={displayName}>
+        <AuthButton />
+      </Sidebar>
+      <main className="flex-1 flex flex-col gap-5 pt-14 lg:pt-0 ">
+        {children}
+      </main>
+    </div>
   );
 }

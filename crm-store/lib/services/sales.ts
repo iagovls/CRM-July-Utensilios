@@ -119,11 +119,7 @@ export const saleService = {
       (data.payment_method as string) ?? "other",
       pid,
     ];
-    const rpcFn = supabase.rpc as unknown as (
-      fn: string,
-      args?: Record<string, unknown>,
-    ) => Promise<{ data: unknown; error: unknown }>;
-    const { data: saleId, error: rpcErr } = await rpcFn(
+    const { data: saleId, error: rpcErr } = await supabase.rpc(
       "create_sale_with_items",
       {
         p_customer_id: rpcArgs[0],

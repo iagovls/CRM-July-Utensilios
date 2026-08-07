@@ -8,7 +8,25 @@ export const metadata = {
   title: "Dashboard",
 };
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-[#616167]">
+          Carregando...
+        </div>
+      }
+    >
+      <DashboardShell>{children}</DashboardShell>
+    </Suspense>
+  );
+}
+
+async function DashboardShell({
   children,
 }: {
   children: React.ReactNode;
