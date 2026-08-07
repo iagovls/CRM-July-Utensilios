@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Tag } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import Button from "@/components/Button";
@@ -20,7 +20,7 @@ export default function CategoriasPage() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const fetchCategories = useCallback(async () => {
+  async function fetchCategories() {
     try {
       const response = await categoryService.getAll();
       setCategories(response.data);
@@ -29,11 +29,13 @@ export default function CategoriasPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    void (async () => {
+      await fetchCategories();
+    })();
+  }, []);
 
   const filteredCategories = categories.filter((category) =>
     category.name?.toLowerCase().includes(searchQuery.toLowerCase())

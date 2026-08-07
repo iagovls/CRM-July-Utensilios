@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "@/components/Sidebar";
@@ -15,15 +15,25 @@ export default function DashboardLayout({
   const { isAuthenticated, isLoading, user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const didRedirectToLoginRef = useRef(false);
+  const didRedirectToVendasRef = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
+    if (isLoading) return;
+
+    if (!isAuthenticated) {
+      if (didRedirectToLoginRef.current) return;
+      didRedirectToLoginRef.current = true;
+      const qs = new URLSearchParams({ next: pathname ?? "/vendas" });
+      const destination = `/login?${qs.toString()}`;
+      router.replace(destination);
       return;
     }
 
-    if (!isLoading && isAuthenticated && adminOnlyRoutes.has(pathname) && !user?.is_admin_role) {
-      router.replace("/clientes");
+    if (adminOnlyRoutes.has(pathname) && !user?.is_admin_role) {
+      if (didRedirectToVendasRef.current) return;
+      didRedirectToVendasRef.current = true;
+      router.replace("/vendas");
     }
   }, [isLoading, isAuthenticated, pathname, router, user]);
 
@@ -35,13 +45,8 @@ export default function DashboardLayout({
     );
   }
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  if (adminOnlyRoutes.has(pathname) && !user?.is_admin_role) {
-    return null;
-  }
+  if (!isAuthenticated) return null;
+  if (adminOnlyRoutes.has(pathname) && !user?.is_admin_role) return null;
 
   return (
     <div className="min-h-screen bg-[#F8F6F4] p-4 lg:p-6">

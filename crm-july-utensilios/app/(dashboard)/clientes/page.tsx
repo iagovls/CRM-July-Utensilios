@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { UserPlus, Search, Pencil, Trash2, Eye, MessageCircle } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import Button from "@/components/Button";
@@ -29,7 +29,7 @@ export default function ClientesPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
-  const fetchClients = useCallback(async () => {
+  async function fetchClients() {
     try {
       const response = await clientService.getAll();
       setClients(response.data);
@@ -38,11 +38,13 @@ export default function ClientesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
+    void (async () => {
+      await fetchClients();
+    })();
+  }, []);
 
   const filteredClients = clients.filter(
     (client) =>

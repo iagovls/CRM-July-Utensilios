@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Plus, CreditCard, XCircle, Banknote, History, Eye } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import Button from "@/components/Button";
@@ -34,7 +34,7 @@ export default function VendasPage() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"vendas" | "parcelas" | "historico">("vendas");
 
-  const fetchData = useCallback(async () => {
+  async function fetchData() {
     try {
       const [salesRes, installmentsRes, clientsRes, productsRes] = await Promise.all([
         saleService.getAll(),
@@ -51,11 +51,13 @@ export default function VendasPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    void (async () => {
+      await fetchData();
+    })();
+  }, []);
 
   const filteredSales = sales.filter(
     (sale) =>

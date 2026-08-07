@@ -561,12 +561,15 @@ export const categoryService = {
 export const dashboardService = {
   async getSummary(_params?: { start_date?: string; end_date?: string }): Promise<ServiceResponse<DashboardSummary>> {
     const allSales = await saleService.getAll();
-    let sales = allSales.data.filter((s) => s.status !== "canceled");
+    let sales = allSales.data.filter(
+      (s) => s.status !== "canceled");
     if (_params?.start_date) {
-      sales = sales.filter((s) => s.created_at >= _params.start_date!);
+      sales = sales.filter(
+        (s) => s.created_at >= _params.start_date!);
     }
     if (_params?.end_date) {
-      sales = sales.filter((s) => s.created_at <= _params.end_date!);
+      sales = sales.filter(
+        (s) => s.created_at <= _params.end_date!);
     }
 
     const total_revenue = sales.reduce((sum, s) => sum + toNumber(s.total_amount), 0);

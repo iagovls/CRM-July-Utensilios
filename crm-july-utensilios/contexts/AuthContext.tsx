@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -20,10 +20,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     try {
       const userData = await authService.getMe();
-
       setUser(userData);
-    } catch (error) {
-      console.error("Error refreshing user:", error);
+    } catch {
       setUser(null);
     }
   }, []);
@@ -31,28 +29,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
+    let mounted = true;
+
+    const apply = (u: User | null) => {
+      if (!cancelled && mounted) setUser(u);
+    };
 
     const initAuth = async () => {
+      unsubscribe = await authService.subscribeAuthChanges(apply);
       try {
         await refreshUser();
+      } catch {
+        // refreshUser already handles resetting user state on error
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled && mounted) setIsLoading(false);
       }
-      unsubscribe = await authService.subscribeAuthChanges((u) => {
-        if (!cancelled) setUser(u);
-      });
     };
     initAuth();
 
     return () => {
       cancelled = true;
+      mounted = false;
       if (unsubscribe) unsubscribe();
     };
   }, [refreshUser]);
 
   const login = async (identifier: string, password: string) => {
     await authService.login(identifier, password);
-    await refreshUser();
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await refreshUser();
+        return;
+      } catch (error) {
+        lastError = error;
+        await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
+      }
+    }
+    try {
+      await authService.logout();
+    } catch {
+      // ignore cleanup errors
+    }
+    throw lastError instanceof Error
+      ? lastError
+      : new Error(String(lastError ?? "Erro ao carregar o perfil após login."));
   };
 
   const logout = async () => {

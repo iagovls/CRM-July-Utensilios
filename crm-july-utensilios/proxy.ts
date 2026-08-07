@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-function getSupabaseCookieNames(url: string): string[] {
+function getSupabaseCookieNames(): string[] {
   const host =
     typeof process === "object" && process.env?.NEXT_PUBLIC_SUPABASE_URL
       ? (() => {
@@ -27,7 +27,7 @@ function getSupabaseCookieNames(url: string): string[] {
 }
 
 function hasSessionCookie(request: NextRequest): boolean {
-  const names = getSupabaseCookieNames(request.url);
+  const names = getSupabaseCookieNames();
   for (const name of names) {
     const value = request.cookies.get(name)?.value;
     if (value && value.length > 0) return true;
@@ -36,7 +36,7 @@ function hasSessionCookie(request: NextRequest): boolean {
 }
 
 function parseAuthSession(request: NextRequest): boolean {
-  const names = getSupabaseCookieNames(request.url);
+  const names = getSupabaseCookieNames();
   for (const name of names) {
     const value = request.cookies.get(name)?.value;
     if (!value) continue;

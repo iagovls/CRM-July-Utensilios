@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2, Package } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import Button from "@/components/Button";
@@ -31,7 +31,7 @@ export default function ProdutosPage() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const fetchProducts = useCallback(async () => {
+  async function fetchProducts() {
     try {
       const response = await productService.getAll();
       setProducts(response.data);
@@ -40,21 +40,22 @@ export default function ProdutosPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
-  const fetchCategories = useCallback(async () => {
+  async function fetchCategories() {
     try {
       const response = await categoryService.getAll();
       setCategories(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, [fetchProducts, fetchCategories]);
+    void (async () => {
+      await Promise.all([fetchProducts(), fetchCategories()]);
+    })();
+  }, []);
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
