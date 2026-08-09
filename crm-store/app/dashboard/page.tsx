@@ -74,9 +74,7 @@ export default function DashboardPage() {
                 Faturamento mensal
               </span>
             </div>
-            <span className="px-3 py-2 bg-[#F8F6F4] rounded-full text-[#2A2933] text-sm font-semibold font-['Inter']">
-              Jan - Jun
-            </span>
+
           </div>
           <div className="flex-1 flex items-end gap-3 px-4 pb-4">
             {data?.monthly.map((m, i) => {

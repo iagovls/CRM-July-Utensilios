@@ -7,6 +7,8 @@ export const metadata = {
   title: "Dashboard",
 };
 
+export const instant = false;
+
 export default function DashboardLayout({
   children,
 }: {

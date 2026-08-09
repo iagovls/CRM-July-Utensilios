@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserPlus, Search, Pencil, Trash2, Eye, MessageCircle } from "lucide-react";
+import { UserPlus, Search, Pencil, Trash2, Eye } from "lucide-react";
+import { WhatsApp } from "@/components/ui/whatsapp";
 import TopBar from "@/components/TopBar";
 import Modal from "@/components/Modal";
 import { Client } from "@/types";
@@ -89,7 +90,7 @@ export default function ClientesPage() {
   };
 
   return (
-    <div className="clip rounded-[32px] bg-white p-4 md:p-8 flex flex-col gap-5 h-full overflow-hidden">
+    <div className="clip rounded-xl bg-white p-4 md:p-8 flex flex-col gap-5 h-full overflow-hidden">
       <TopBar
         title="Clientes"
         subtitle="Cadastro, histórico e status de relacionamento."
@@ -97,7 +98,7 @@ export default function ClientesPage() {
       />
 
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="w-full md:w-[280px] h-12 bg-[#F8F6F4] rounded-full px-4 flex items-center gap-2">
+        <div className="w-full md:w-[280px] h-12 bg-[#F8F6F4] rounded-xl px-4 flex items-center gap-2">
           <Search className="w-[18px] h-[18px] text-[#939399]" />
           <input
             type="text"
@@ -116,7 +117,7 @@ export default function ClientesPage() {
         </Button>
       </div>
 
-      <div className="flex-1 bg-[#F8F6F4] rounded-[28px] p-4 md:p-6 flex flex-col gap-3 overflow-auto">
+      <div className="flex-1 bg-[#F8F6F4] rounded-xl p-4 md:p-6 flex flex-col gap-3 overflow-auto">
         <h2 className="text-[#2A2933] text-lg font-bold font-['Inter']">
           Histórico e status
         </h2>
@@ -165,7 +166,7 @@ export default function ClientesPage() {
                         rel="noopener noreferrer"
                         className="w-8 h-8 rounded-lg bg-[#25D366] flex items-center justify-center hover:bg-[#20BA5A] transition-colors"
                       >
-                        <MessageCircle className="w-4 h-4 text-white" />
+                        <WhatsApp className="w-4 h-4 text-white" />
                       </a>
                     )}
                     <button
@@ -238,7 +239,7 @@ export default function ClientesPage() {
                       rel="noopener noreferrer"
                       className="w-6 h-6 rounded bg-[#25D366] flex items-center justify-center hover:bg-[#20BA5A] transition-colors"
                     >
-                      <MessageCircle className="w-3 h-3 text-white" />
+                      <WhatsApp className="w-3 h-3 text-white" />
                     </a>
                   )}
                 </div>

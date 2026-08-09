@@ -9,7 +9,7 @@ export async function AuthButton() {
 
   return (
     <div className="flex gap-2 mt-auto pt-2.5">
-      <Link href="/perfil" className="flex items-center gap-2.5 mb-3">
+      <Link href="/dashboard/perfil" className="flex items-center gap-2.5 mb-3">
         <div className="w-10 h-10 bg-[#FFDAD8] rounded-xl flex items-center justify-center">
           <CircleUserRound className="w-5 h-5 text-[#2A2933]" />
         </div>

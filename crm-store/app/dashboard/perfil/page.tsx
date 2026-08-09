@@ -2,6 +2,8 @@ import { Shield } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import { getUserClaims, getDisplayName } from "@/lib/auth";
 
+export const instant = false;
+
 export default async function PerfilPage() {
   const claims = await getUserClaims();
   const displayName = getDisplayName(claims, "Usuário");
