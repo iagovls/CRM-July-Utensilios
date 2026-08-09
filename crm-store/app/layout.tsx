@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import Sidebar from "@/components/sidebar";
 import { Suspense } from "react";
-import { AuthButton } from "@/components/auth-button";
-import { getDisplayName, getUserClaims } from "@/lib/auth";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -57,19 +54,11 @@ async function AppShell({
 }: {
   children: React.ReactNode;
 }) {
-  const claims = await getUserClaims();
-  const isLoggedIn = !!claims?.sub;
-  const displayName = getDisplayName(claims);
 
-  if (!isLoggedIn) {
-    return <>{children}</>;
-  }
+
 
   return (
     <div className="min-h-screen bg-[#F8F6F4] flex md:p-3 md:gap-2 rounded-xl overflow-x-hidden">
-      <Sidebar displayName={displayName}>
-        <AuthButton />
-      </Sidebar>
       <main className="flex-1 flex flex-col gap-5 pt-14 px-2 lg:pt-0 min-w-0">
         {children}
       </main>

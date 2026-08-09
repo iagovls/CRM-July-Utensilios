@@ -17,11 +17,11 @@ import { useState } from "react";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard"},
-  { href: "/clientes", icon: Users, label: "Clientes" },
-  { href: "/produtos", icon: Package, label: "Produtos" },
-  { href: "/categorias", icon: Tag, label: "Categorias" },
-  { href: "/vendas", icon: ReceiptText, label: "Vendas" },
-  { href: "/financeiro", icon: Banknote, label: "Financeiro"},
+  { href: "/dashboard/clientes", icon: Users, label: "Clientes" },
+  { href: "/dashboard/produtos", icon: Package, label: "Produtos" },
+  { href: "/dashboard/categorias", icon: Tag, label: "Categorias" },
+  { href: "/dashboard/vendas", icon: ReceiptText, label: "Vendas" },
+  { href: "/dashboard/financeiro", icon: Banknote, label: "Financeiro"},
 ];
 
 export default function Sidebar({
