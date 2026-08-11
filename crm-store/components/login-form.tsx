@@ -31,10 +31,12 @@ export function LoginForm({
         email,
         password,
       });
+      
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/dashboard");
+      router.refresh();
+      router.replace("/dashboard");
     } catch (error: unknown) {
+      console.log("Login error:", error);
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
