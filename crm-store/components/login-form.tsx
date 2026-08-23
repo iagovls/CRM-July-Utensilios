@@ -27,12 +27,20 @@ export function LoginForm({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
+
+      const appId = data.session?.user?.app_metadata?.app_id;
+      console.log("appId", appId)
+      if (appId !== "july_utensilios") {
+        await supabase.auth.signOut();
+        throw new Error("Usuário não autorizado para esta aplicação.");
+      }
+
       router.refresh();
       router.replace("/dashboard");
     } catch (error: unknown) {
