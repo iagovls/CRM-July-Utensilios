@@ -48,7 +48,7 @@ export default function RootLayout({
       <body className={`${geistSans.className} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="base"
           enableSystem
           disableTransitionOnChange
         >
@@ -72,9 +72,6 @@ async function AppShell({
 }: {
   children: React.ReactNode;
 }) {
-
-
-
   return (
     <div className="min-h-screen bg-[#F8F6F4] flex md:p-3 md:gap-2 rounded-xl overflow-x-hidden">
       <main className="flex-1 flex flex-col gap-5 pt-14 px-2 lg:pt-0 min-w-0">
